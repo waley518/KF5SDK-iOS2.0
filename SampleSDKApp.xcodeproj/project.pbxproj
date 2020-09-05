@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		717CBABF2503A23E00A18064 /* KFHelper+CurrentImage.h in Headers */ = {isa = PBXBuildFile; fileRef = 717CBABD2503A23E00A18064 /* KFHelper+CurrentImage.h */; };
+		717CBAC02503A23E00A18064 /* KFHelper+CurrentImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 717CBABE2503A23E00A18064 /* KFHelper+CurrentImage.m */; };
 		841D3C04213F7ADE00DDDC01 /* KFChatViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 8455FACF1FDE1C61004B4852 /* KFChatViewController.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		841D3C05213F7ADE00DDDC01 /* KF5SDKChat.h in Headers */ = {isa = PBXBuildFile; fileRef = 8455FACD1FDE1C61004B4852 /* KF5SDKChat.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		841D3C06213F7ADE00DDDC01 /* KFMessageModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 8455FAE41FDE1C61004B4852 /* KFMessageModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -590,6 +592,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		717CBABD2503A23E00A18064 /* KFHelper+CurrentImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "KFHelper+CurrentImage.h"; sourceTree = "<group>"; };
+		717CBABE2503A23E00A18064 /* KFHelper+CurrentImage.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "KFHelper+CurrentImage.m"; sourceTree = "<group>"; };
 		841D3C9D213F7D5100DDDC01 /* KFMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KFMessage.h; sourceTree = "<group>"; };
 		841D3C9E213F7D5100DDDC01 /* KF5SDKCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KF5SDKCore.h; sourceTree = "<group>"; };
 		841D3C9F213F7D5100DDDC01 /* KFAgent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KFAgent.h; sourceTree = "<group>"; };
@@ -1072,6 +1076,8 @@
 				8455FAC21FDE1C61004B4852 /* UIImage+KF5.m */,
 				8455FAC01FDE1C61004B4852 /* UITableView+KFRefresh.h */,
 				8455FAC51FDE1C61004B4852 /* UITableView+KFRefresh.m */,
+				717CBABD2503A23E00A18064 /* KFHelper+CurrentImage.h */,
+				717CBABE2503A23E00A18064 /* KFHelper+CurrentImage.m */,
 			);
 			path = Category;
 			sourceTree = "<group>";
@@ -1913,6 +1919,7 @@
 				84A2CE3D24FFD8F00052D2E9 /* SDWebImageDownloaderConfig.h in Headers */,
 				841D3CC1213F7D8100DDDC01 /* KFAutoLayout.h in Headers */,
 				84A2CEB824FFD8F10052D2E9 /* SDWebImageIndicator.h in Headers */,
+				717CBABF2503A23E00A18064 /* KFHelper+CurrentImage.h in Headers */,
 				84A2CE9524FFD8F10052D2E9 /* SDAnimatedImage.h in Headers */,
 				84A2CE5924FFD8F00052D2E9 /* SDDisplayLink.h in Headers */,
 				84A2CE7C24FFD8F10052D2E9 /* SDmetamacros.h in Headers */,
@@ -2045,7 +2052,7 @@
 					};
 					84E2BDC01E2347C0006BD73E = {
 						CreatedOnToolsVersion = 8.2;
-						DevelopmentTeam = WBB6368FVN;
+						DevelopmentTeam = Q7A878DJ6M;
 						ProvisioningStyle = Automatic;
 					};
 					84E2BDD91E2347C0006BD73E = {
@@ -2277,6 +2284,7 @@
 				84741868213E2C6D0079EE9D /* KFAttView.m in Sources */,
 				84A2CE5B24FFD8F00052D2E9 /* SDWebImageIndicator.m in Sources */,
 				84A2CE9424FFD8F10052D2E9 /* SDWebImageDownloaderConfig.m in Sources */,
+				717CBAC02503A23E00A18064 /* KFHelper+CurrentImage.m in Sources */,
 				84A2CE6724FFD8F10052D2E9 /* SDMemoryCache.m in Sources */,
 				84A2CED324FFD8F10052D2E9 /* UIView+WebCache.m in Sources */,
 				84A2CDE424FFD8F00052D2E9 /* TZProgressView.m in Sources */,
@@ -2776,7 +2784,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = WBB6368FVN;
+				DEVELOPMENT_TEAM = Q7A878DJ6M;
 				ENABLE_BITCODE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2801,7 +2809,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = WBB6368FVN;
+				DEVELOPMENT_TEAM = Q7A878DJ6M;
 				ENABLE_BITCODE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",

@@ -18,6 +18,16 @@
 #import "KFContentLabelHelp.h"
 #import "KFSelectQuestionController.h"
 
+//// AC派自定义
+//#if __has_include("AZBase.h")
+//#import "AZBase.h"
+//#import "AZContactViewController.h"
+//#import <IQKeyboardManager/IQKeyboardManager.h>
+//#define AzoyaClub 1
+//#else
+//#define AzoyaClub 0
+//#endif
+
 #if __has_include("KFDocumentViewController.h")
 #import "KFDocumentViewController.h"
 #import "KFDocItem.h"
@@ -67,18 +77,43 @@
     return self;
 }
 
+#if AzoyaClub
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    self.statusBarStyle = UIStatusBarStyleDefault;
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [[IQKeyboardManager sharedManager] setEnable:NO];
+    [IQKeyboardManager sharedManager].enableAutoToolbar = NO;
+    [[AZFloatWindow sharedInstance] suspensionViewShow];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    [super viewDidDisappear:animated];
+    [[IQKeyboardManager sharedManager] setEnable:YES];
+    [IQKeyboardManager sharedManager].enableAutoToolbar = YES;
+}
+#endif
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+#if AzoyaClub
+    [self.view bringSubviewToFront:self.navigationBar];
     [self setupView];
     [self layoutView];
-    
+#else
+    [self setupView];
+    [self layoutView];
     self.viewModel = [[KFChatViewModel alloc]init];
     self.viewModel.metadata = self.metadata;
     self.viewModel.assignAgentWhenSendedMessage = self.assignAgentWhenSendedMessage;
     self.viewModel.delegate = self;
     self.viewModel.questionId = self.questionId;
     [KFChatVoiceManager sharedChatVoiceManager].delegate = self;
+#endif
     
     // 解决speakBtn的UIControlEventTouchDown响应延迟的问题
     self.navigationController.interactivePopGestureRecognizer.delaysTouchesBegan=NO;
@@ -89,6 +124,36 @@
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(didEnterBackground:) name:UIApplicationDidEnterBackgroundNotification object:nil];
     // 进入前台连接服务器
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(willEnterForeground:) name:UIApplicationWillEnterForegroundNotification object:nil];
+    
+#if AzoyaClub
+    // 初始化用户
+    [[AZKF5Manager shareManager] initKF5UserChatCompletion:^(BOOL success) {
+        [self refreshData];
+    }];
+
+    if (@available(iOS 11.0, *)) {
+        [UIScrollView appearance].contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAlways;
+    }
+#else
+    // 连接服务器
+    [self connectServer];
+
+    NSMutableArray <KFMessageModel *>*newDatas = [NSMutableArray arrayWithArray:[self.viewModel queryMessageModelsWithLimit:self.limit]];
+    self.tableView.canRefresh = newDatas.count >= self.limit;
+    self.tableView.messageModels = newDatas;
+    [self.tableView reloadData];
+#endif
+}
+
+#if AzoyaClub
+- (void)refreshData {
+    self.viewModel = [[KFChatViewModel alloc]init];
+    self.viewModel.metadata = self.metadata;
+    self.viewModel.assignAgentWhenSendedMessage = self.assignAgentWhenSendedMessage;
+    self.viewModel.delegate = self;
+    self.viewModel.questionId = self.questionId;
+    [KFChatVoiceManager sharedChatVoiceManager].delegate = self;
+
     // 连接服务器
     [self connectServer];
 
@@ -97,6 +162,7 @@
     self.tableView.messageModels = newDatas;
     [self.tableView reloadData];
 }
+#endif
 
 #pragma mark 连接服务器
 - (void)connectServer{
@@ -127,6 +193,13 @@
     tableView.tableDelegate = self;
     [self.view addSubview:tableView];
     self.tableView = tableView;
+
+#if AzoyaClub
+    UIImageView *bgimageView = [[UIImageView alloc] init];
+    bgimageView.image = kFileImage(@"chatBg", @"jpg");
+    bgimageView.contentMode = UIViewContentModeScaleAspectFill;
+    self.tableView.backgroundView = bgimageView;
+#endif
     
     // 添加输入框视图
     KFChatToolView *chatToolView = [[KFChatToolView alloc]init];
@@ -152,12 +225,21 @@
 }
 
 - (void)layoutView {
+#if AzoyaClub
+    [self.tableView kf5_makeConstraints:^(KFAutoLayout * _Nonnull make) {
+        make.left.kf_equalTo(self.view.kf5_safeAreaLayoutGuideLeft);
+        make.right.kf_equalTo(self.view.kf5_safeAreaLayoutGuideRight);
+        make.top.kf_equalTo(self.view).kf_offset(self.navigationBar.height);
+        make.bottom.kf_equalTo(self.chatToolView.kf5_top);
+    }];
+#else
     [self.tableView kf5_makeConstraints:^(KFAutoLayout * _Nonnull make) {
         make.left.kf_equalTo(self.view.kf5_safeAreaLayoutGuideLeft);
         make.right.kf_equalTo(self.view.kf5_safeAreaLayoutGuideRight);
         make.top.kf_equalTo(self.view);
         make.bottom.kf_equalTo(self.chatToolView.kf5_top);
     }];
+#endif
     
     [self.chatToolView kf5_makeConstraints:^(KFAutoLayout * _Nonnull make) {
         make.left.kf_equalTo(self.view.kf5_safeAreaLayoutGuideLeft);
@@ -197,18 +279,65 @@
 }
 #endif
 
+#if AzoyaClub
+#pragma mark - UIImagePickerControllerDelegate
+
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary<NSString *, id> *)info {
+    __weak typeof(self) weakSelf = self;
+    [picker dismissViewControllerAnimated:YES completion:^{
+        UIImage *image = info[UIImagePickerControllerOriginalImage];
+        if (image) {
+            NSData *data = UIImageJPEGRepresentation(image, 0.2);
+            [weakSelf.viewModel sendMessageWithMessageType:KFMessageTypeImage data:[UIImage imageWithData:data]];
+        }
+    }];
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+#endif
+
 #pragma mark - KFChatViewModelDelegate
 #pragma mark 连接服务器失败
 - (void)chat:(KFChatViewModel *)chat connectError:(NSError *)error{
     dispatch_async(dispatch_get_main_queue(), ^{
+#if AzoyaClub
+        self.navigationBar.title = KF5Localized(@"kf5_not_connected");
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t) (1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [HTCHud showTextHUD:kLocalized(@"network_close", @"AZBase") toView:self.view afterHide:nil];
+        });
+#else
         self.title = KF5Localized(@"kf5_not_connected");
         [self showMessageWithText:error.domain];
+#endif
     });
 }
 #pragma mark 状态变化
 - (void)chat:(KFChatViewModel *)chat statusChange:(KFChatStatus)status{
     dispatch_async(dispatch_get_main_queue(), ^{
         self.chatToolView.chatToolViewType = status;
+#if AzoyaClub
+        switch (status) {
+            case KFChatStatusNone:
+                self.navigationBar.title = KF5Localized(@"kf5_chat");
+                break;
+            case KFChatStatusQueue:
+                self.navigationBar.title = KF5Localized(@"kf5_queue_waiting");
+                break;
+            case KFChatStatusAIAgent:
+            case KFChatStatusChatting:{
+                [self removeQueueMessage];
+                self.navigationBar.title = self.viewModel.currentAgent.displayName;
+            }
+                break;
+            default:
+                break;
+        }
+        if (self.navigationBar.title.length == 0) {
+            self.navigationBar.title = KF5Localized(@"kf5_chat");
+        }
+#else
         switch (status) {
             case KFChatStatusNone:
                 self.title = KF5Localized(@"kf5_chat");
@@ -228,6 +357,7 @@
         if (self.title.length == 0) {
             self.title = KF5Localized(@"kf5_chat");
         }
+#endif
     });
 }
 #pragma mark 排队失败
@@ -236,6 +366,19 @@
         
         [self removeQueueMessage];
         
+#if AzoyaClub
+        self.navigationBar.title = KF5Localized(@"kf5_no_agent_online");
+        if (self.isShowAlertWhenNoAgent) {
+            __weak typeof(self)weakSelf = self;
+            if (![self isBetweenFromHour:9 toHour:21]) {
+                showAlert(getCurrentNavigationController(), kLocalized(@"chat_alert_servicetime_title", @"AZUserCenter"), nil, kLocalized(@"chat_alert_button_default", @"AZUserCenter"), nil);
+            } else {
+                showConfirm(getCurrentNavigationController(), kLocalized(@"chat_alert_serviceleave_title", @"AZUserCenter"), nil, kLocalized(@"chat_alert_button_cancel", @"AZUserCenter"), kLocalized(@"chat_alert_button_leave", @"AZUserCenter"), nil, ^{
+                    [weakSelf.navigationController pushViewController:[AZContactViewController new] animated:YES];
+                });
+            }
+        }
+#else
         NSString *message = nil;
         if (error.code == KFErrorCodeAgentOffline) {
             message = KF5Localized(@"kf5_no_agent_online");
@@ -263,6 +406,7 @@
                 }
             }]showToVC:self];
         }
+#endif
     });
 }
 
@@ -318,7 +462,12 @@
 #pragma mark 对话被客服关闭
 - (void)chatWithEndChat:(KFChatViewModel *)chat{
     dispatch_async(dispatch_get_main_queue(), ^{
+#if AzoyaClub
+        self.navigationBar.title = KF5Localized(@"kf5_chat_ended");
+        [self showMessageWithText:KF5Localized(@"kf5_chat_agent_leave")];
+#else
         [self showMessageWithText:KF5Localized(@"kf5_chat_ended")];
+#endif
     });
 }
 #pragma mark 添加数据
@@ -377,6 +526,139 @@
     [KFSelectQuestionController selectQuestionWithViewController:self questions:options selectBlock:selectBlock];
 }
 
+#if AzoyaClub
+- (void)showCameraDeniedAlert {
+    void (^okHandler)() = ^{
+        [AZUtil applicationOpenSettingsURLString];
+    };
+    showConfirm(getCurrentNavigationController(), kLocalized(@"camera_access_denied", @"AZUserCenter"), nil, kLocalized(@"alert_cancel", @"AZBase"), kLocalized(@"alert_setting", @"AZBase"), nil, okHandler);
+}
+
+- (void)showPhotoDeniedAlert {
+    showPhotoDeniedAlert();
+}
+
+- (void)chatToolChoosePicture {
+    if (![self canSendMessage]) return;
+    [self.view endEditing:YES];
+
+    [[AZFloatWindow sharedInstance] suspensionViewHide];
+    BOOL authStatus = requestPhotoLibraryAuthorization();
+    if (authStatus) {
+        PHAuthorizationStatus status = [PHPhotoLibrary authorizationStatus];
+        if (status == PHAuthorizationStatusNotDetermined) {
+            [PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status2) {
+                if (status2) {
+                    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+                    picker.delegate = self;
+                    picker.allowsEditing = NO;
+                    dispatch_async_on_main_queue(^{
+                        [getRootViewController() presentViewController:picker animated:YES completion:nil];
+                    });
+                } else {
+                    [self showPhotoDeniedAlert];
+                }
+            }];
+        } else {
+            UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+            picker.delegate = self;
+            picker.allowsEditing = NO;
+            dispatch_async_on_main_queue(^{
+                [getRootViewController() presentViewController:picker animated:YES completion:nil];
+            });
+        }
+
+    } else {
+        [self showPhotoDeniedAlert];
+    }
+}
+
+- (void)chatToolTakePicture {
+    if (![self canSendMessage]) return;
+    [self.view endEditing:YES];
+
+    [[AZFloatWindow sharedInstance] suspensionViewHide];
+    BOOL authStatus = requestCameraAuthorization();
+    if (authStatus) {
+        AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+        if (status == AVAuthorizationStatusNotDetermined) {
+            [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+                dispatch_sync_on_main_queue(^{
+                    if (granted) {
+                        UIImagePickerControllerSourceType sourceType = UIImagePickerControllerSourceTypeCamera;
+                        if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+                            UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+                            picker.delegate = self;
+                            picker.allowsEditing = NO;
+                            picker.sourceType = sourceType;
+                            [getRootViewController() presentViewController:picker animated:YES completion:nil];
+                        }
+                    } else {
+                        [self showCameraDeniedAlert];
+                    }
+                });
+            }];
+        } else {
+            UIImagePickerControllerSourceType sourceType = UIImagePickerControllerSourceTypeCamera;
+            if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+                UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+                picker.delegate = self;
+                picker.allowsEditing = NO;
+                picker.sourceType = sourceType;
+                dispatch_async_on_main_queue(^{
+                    [getRootViewController() presentViewController:picker animated:YES completion:nil];
+                });
+            }
+        }
+
+    } else {
+        [self showCameraDeniedAlert];
+    }
+}
+
+#pragma mark - 修改时间判断
+
+/**
+ * @brief 判断当前时间是否在fromHour和toHour之间。如，fromHour=8，toHour=23时，即为判断当前时间是否在8:00-23:00之间
+ */
+- (BOOL)isBetweenFromHour:(NSInteger)fromHour toHour:(NSInteger)toHour {
+    NSDate *dateFrom = [self getCustomDateWithHour:fromHour];
+    NSDate *dateTo = [self getCustomDateWithHour:toHour];
+
+    NSDate *currentDate = [NSDate date];
+    if ([currentDate compare:dateFrom] == NSOrderedDescending && [currentDate compare:dateTo] == NSOrderedAscending) {
+        // 当前时间在9点和10点之间
+        return YES;
+    }
+    return NO;
+}
+
+/**
+ * @brief 生成当天的某个点（返回的是伦敦时间，可直接与当前时间[NSDate date]比较）
+ * @param hour 如hour为“8”，就是上午8:00（本地时间）
+ */
+- (NSDate *)getCustomDateWithHour:(NSInteger)hour {
+    //获取当前时间
+    NSDate *currentDate = [NSDate date];
+    NSCalendar *currentCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDateComponents *currentComps = [[NSDateComponents alloc] init];
+
+    NSInteger unitFlags = NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitWeekday | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond;
+
+    currentComps = [currentCalendar components:unitFlags fromDate:currentDate];
+    //设置当天的某个点
+    NSDateComponents *resultComps = [[NSDateComponents alloc] init];
+    [resultComps setYear:[currentComps year]];
+    [resultComps setMonth:[currentComps month]];
+    [resultComps setDay:[currentComps day]];
+    [resultComps setHour:hour];
+
+    NSCalendar *resultCalendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    return [resultCalendar dateFromComponents:resultComps];
+}
+
+#endif
+
 #pragma mark - KFChatVoiceManagerDelegate
 - (void)chatVoiceManager:(KFChatVoiceManager *)voiceManager voiceFileURL:(NSURL *)voiceFileURL error:(NSError *)error{
     if (error) {
@@ -401,6 +683,8 @@
 }
 #pragma mark 添加图片按钮点击事件
 - (void)chatToolViewWithAddPictureAction:(KFChatToolView *)chatToolView{
+#if AzoyaClub
+#else
     if (![self canSendMessage]) return;
     
     __weak typeof(self)weakSelf = self;
@@ -421,6 +705,7 @@
     }else{
         [KFLogger log:@"请添加自己的图片选择器"];
     }
+#endif
 }
 #pragma mark 转接人工客服点击事件
 - (void)chatToolViewWithTransferAction:(KFChatToolView *)chatToolView{
@@ -714,6 +999,13 @@
 }
 
 - (void)dealloc{
+#if AzoyaClub
+    DDLogVerbose(@"%@ dealloced.", self);
+    
+    if (@available(iOS 11.0, *)) {
+        [UIScrollView appearance].contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+    }
+#endif
     [[NSNotificationCenter defaultCenter]removeObserver:self];
 }
 

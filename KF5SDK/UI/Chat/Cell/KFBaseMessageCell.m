@@ -62,7 +62,12 @@
     _timeLabel.frame = messageModel.timeFrame;
     
     if (messageModel.message.messageFrom == KFMessageFromOther) {
+#if AzoyaClub
+        AZUser *user = [AZSessionManager curLoginUser];
+        [_headerImageView sd_setImageWithURL:[NSURL URLWithString:user.avatar] placeholderImage:messageModel.headerImage];
+#else
         [_headerImageView sd_setImageWithURL:[KFHelper fullURL:[[KFChatManager sharedChatManager] agentWithId:messageModel.message.user_id].photoUrl] placeholderImage:messageModel.headerImage];
+#endif
     }else{
         _headerImageView.image = messageModel.headerImage;
     }
