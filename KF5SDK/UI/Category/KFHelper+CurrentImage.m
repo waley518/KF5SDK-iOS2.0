@@ -7,6 +7,7 @@
 //
 
 #import "KFHelper+CurrentImage.h"
+#import "objc/runtime.h"
 
 @implementation KFHelper (CurrentImage)
 
