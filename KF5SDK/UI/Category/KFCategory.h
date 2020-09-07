@@ -15,6 +15,7 @@
 #import "NSDictionary+KF5.h"
 #import "UIImage+KF5.h"
 #import "UITableView+KFRefresh.h"
+#import "KFHelper+CurrentImage.h"
 
 #if __has_include("KF5SDKCore.h")
 #import "KF5SDKCore.h"
