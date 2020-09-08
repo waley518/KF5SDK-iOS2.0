@@ -19,14 +19,14 @@
 #import "KFSelectQuestionController.h"
 
 //// AC派自定义
-//#if __has_include("AZBase.h")
-//#import "AZBase.h"
-//#import "AZContactViewController.h"
-//#import <IQKeyboardManager/IQKeyboardManager.h>
-//#define AzoyaClub 1
-//#else
-//#define AzoyaClub 0
-//#endif
+#if __has_include("AZBase.h")
+#import "AZBase.h"
+#import "AZContactViewController.h"
+#import <IQKeyboardManager/IQKeyboardManager.h>
+#define AzoyaClub 1
+#else
+#define AzoyaClub 0
+#endif
 
 #if __has_include("KFDocumentViewController.h")
 #import "KFDocumentViewController.h"
